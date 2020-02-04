@@ -1,4 +1,5 @@
 <?php
+
 namespace Eduardokum\LaravelBoleto\Contracts\Boleto;
 
 use Eduardokum\LaravelBoleto\Contracts\Pessoa as PessoaContract;
@@ -15,6 +16,17 @@ interface Boleto
     const COD_BANCO_BANRISUL = '041';
     const COD_BANCO_BANCOOB = '756';
     const COD_BANCO_BNB = '004';
+
+    const JUROS_TIPO_ISENTO = 0;
+    const JUROS_TIPO_VALOR = 1;
+    const JUROS_TIPO_PORCENTAGEM = 2;
+
+    const MULTA_TIPO_ISENTO = 0;
+    const MULTA_TIPO_VALOR = 1;
+    const MULTA_TIPO_PORCENTAGEM = 2;
+
+    const TIPO_IMPRESSAO_BANCO = 1;
+    const TIPO_IMPRESSAO_CLIENTE = 2;
 
     const STATUS_REGISTRO = 1;
     const STATUS_ALTERACAO = 2;
@@ -93,6 +105,11 @@ interface Boleto
     /**
      * @return int
      */
+    public function getTipoImpressao();
+
+    /**
+     * @return int
+     */
     public function getMoeda();
 
     /**
@@ -133,6 +150,16 @@ interface Boleto
     /**
      * @return mixed
      */
+    public function getMultaApos();
+
+    /**
+     * @return mixed
+     */
+    public function getMultaTipo();
+
+    /**
+     * @return mixed
+     */
     public function getJuros();
 
     /**
@@ -144,6 +171,11 @@ interface Boleto
      * @return mixed
      */
     public function getJurosApos();
+
+    /**
+     * @return mixed
+     */
+    public function getJurosTipo();
 
     /**
      * @param int $default
@@ -263,8 +295,8 @@ interface Boleto
     public function baixarBoleto();
 
     /**
-    * @return mixed
-    */
+     * @return mixed
+     */
     public function alterarDataDeVencimento();
 
     /**

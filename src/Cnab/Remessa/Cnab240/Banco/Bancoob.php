@@ -132,8 +132,16 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(58, 58, $this->getCarteira());
         $this->add(59, 59, '0');
         $this->add(60, 60, '');
-        $this->add(61, 61, '2');
-        $this->add(62, 62, '2');
+
+        // Tipo de impressão
+        if ($boleto->getTipoImpressao() == $boleto::TIPO_IMPRESSAO_CLIENTE) {
+            $this->add(61, 61, '2');
+            $this->add(62, 62, '2');
+        } else {
+            $this->add(61, 61, '1');
+            $this->add(62, 62, '1');
+        }
+
         $this->add(63, 77, Util::formatCnab('9', $boleto->getNumeroDocumento(), 15));
         $this->add(78, 85, $boleto->getDataVencimento()->format('dmY'));
         $this->add(86, 100, Util::formatCnab('9', $boleto->getValor(), 15, 2));
@@ -142,9 +150,18 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(107, 108, Util::formatCnab('9', $boleto->getEspecieDocCodigo(), 2));
         $this->add(109, 109, Util::formatCnab('9', $boleto->getAceite() == 'N' ? 'N' : 'A', 1));    //N = Não Aceita     A = Aceite
         $this->add(110, 117, $boleto->getDataDocumento()->format('dmY'));
-        $this->add(118, 118, ($boleto->getJuros() !== null && $boleto->getJuros() > 0) ? '2' : '0');    //0 = ISENTO | 1 = R$ ao dia | 2 = % ao mês
-        $this->add(119, 126, ($boleto->getJuros() !== null && $boleto->getJuros() > 0) ? $boleto->getDataVencimento()->format('dmY') : '00000000');        $this->add(127, 141, Util::formatCnab('9', $boleto->getJuros(), 15, 2)); //Taxa mensal
-        $this->add(142, 142, $boleto->getDesconto() > 0  ? '1' : '0'); //0 = SEM DESCONTO | 1 = VALOR FIXO | 2 = PERCENTUAL
+
+        // Juros
+        $this->add(118, 118, $boleto->getJurosTipo()); //0 = ISENTO | 1 = R$ ao dia | 2 = % ao mês
+        if ($boleto->getJurosTipo() == $boleto::JUROS_TIPO_ISENTO) {
+            $this->add(119, 126, '00000000');
+            $this->add(127, 141, '000000000000000');
+        } else {
+            $this->add(119, 126, $boleto->getDataVencimento()->copy()->addDay($boleto->getJurosApos() ?? 0)->format('dmY'));
+            $this->add(127, 141, Util::formatCnab('9', $boleto->getJuros(), 15, 2)); // Porcentagem/valor
+        }
+
+        $this->add(142, 142, $boleto->getDesconto() > 0 ? '1' : '0'); //0 = SEM DESCONTO | 1 = VALOR FIXO | 2 = PERCENTUAL
         $this->add(143, 150, $boleto->getDesconto() > 0 ? $boleto->getDataDesconto()->format('dmY') : '00000000');
         $this->add(151, 165, Util::formatCnab('9', $boleto->getDesconto(), 15, 2));
         $this->add(166, 180, Util::formatCnab('9', 0, 15, 2));
@@ -152,7 +169,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(196, 220, Util::formatCnab('X', $boleto->getNumeroControle(), 25));
         $this->add(221, 221, self::PROTESTO_NAO_PROTESTAR);
         if ($boleto->getDiasProtesto() > 0) {
-            $this->add(221, 221, self::PROTESTO_DIAS_UTEIS);
+            $this->add(221, 221, self::PROTESTO_DIAS_CORRIDOS);
         }
         $this->add(222, 223, Util::formatCnab('9', $boleto->getDiasProtesto(), 2));
         $this->add(224, 224, '0');
@@ -201,7 +218,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(210, 212, '000');
         $this->add(213, 240, Util::formatCnab('X', '', 28));
 
-        if($boleto->getSacadorAvalista()) {
+        if ($boleto->getSacadorAvalista()) {
             $this->add(154, 154, strlen(Util::onlyNumbers($boleto->getSacadorAvalista()->getDocumento())) == 14 ? 2 : 1);
             $this->add(155, 169, Util::formatCnab('9', Util::onlyNumbers($boleto->getSacadorAvalista()->getDocumento()), 15));
             $this->add(170, 209, Util::formatCnab('X', $boleto->getSacadorAvalista()->getNome(), 40));
@@ -238,8 +255,17 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(42, 42, '0');
         $this->add(43, 50, '00000000');
         $this->add(51, 65, '000000000000000');
-        $this->add(66, 66, $boleto->getMulta() > 0 ? '2' : '0'); //0 = ISENTO | 1 = VALOR FIXO | 2 = PERCENTUAL
-        $this->add(67, 74, $boleto->getMulta() > 0 ?  $boleto->getDataVencimento()->format('dmY') : '00000000');        $this->add(75, 89, Util::formatCnab('9', $boleto->getMulta(), 15, 2));  //2,20 = 0000000000220
+
+        // Multa
+        $this->add(66, 66, $boleto->getMultaTipo()); //0 = ISENTO | 1 = VALOR FIXO | 2 = PERCENTUAL
+        if ($boleto->getMultaTipo() == $boleto::MULTA_TIPO_ISENTO) {
+            $this->add(67, 74, '00000000');
+            $this->add(75, 89, '000000000000000');  //2,20 = 0000000000220
+        } else {
+            $this->add(67, 74, $boleto->getDataVencimento()->copy()->addDay($boleto->getMultaApos() ?? 0)->format('dmY'));
+            $this->add(75, 89, Util::formatCnab('9', $boleto->getMulta(), 15, 2));  //2,20 = 0000000000220
+        }
+
         $this->add(90, 199, '');
         $this->add(200, 207, '00000000');
         $this->add(208, 210, '000');
@@ -336,7 +362,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaTrailerLote();
 
-        $valor = array_reduce($this->boletos, function($valor, $boleto) {
+        $valor = array_reduce($this->boletos, function ($valor, $boleto) {
             return $valor + $boleto->getValor();
         }, 0);
 
