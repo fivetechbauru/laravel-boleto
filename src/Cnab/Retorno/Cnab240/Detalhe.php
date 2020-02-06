@@ -538,7 +538,7 @@ class Detalhe implements DetalheContract
      */
     public function hasError()
     {
-        return $this->getOcorrencia() == self::OCORRENCIA_ERRO;
+        return $this->getOcorrenciaTipo() == self::OCORRENCIA_ERRO;
     }
 
     /**
@@ -582,7 +582,7 @@ class Detalhe implements DetalheContract
 
         return $this;
     }
-    
+
      /**
   * @return string
   */

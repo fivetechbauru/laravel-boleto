@@ -234,8 +234,8 @@ class Bancoob extends AbstractRetorno implements RetornoCnab240
             ->setCodigoRemessaRetorno($this->rem(143, 143, $header))
             ->setData($this->rem(144, 151, $header))
             ->setNumeroSequencialArquivo($this->rem(158, 163, $header))
-            ->setVersaoLayoutArquivo($this->rem(164, 166, $header))
-            ->setData($this->rem(192, 199, $header));
+            ->setVersaoLayoutArquivo($this->rem(164, 166, $header));
+            //->setData($this->rem(192, 199, $header));
 
         return true;
     }
