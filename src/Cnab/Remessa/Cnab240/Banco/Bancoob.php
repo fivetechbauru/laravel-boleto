@@ -90,6 +90,25 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->segmentoR($boleto);
         return $this;
     }
+    
+    private function addStatus($boleto) {
+
+        $this->add(16, 17, self::OCORRENCIA_REMESSA);
+
+        if ($boleto->getStatus() == $boleto::STATUS_BAIXA) {
+            $this->add(16, 17, self::OCORRENCIA_PEDIDO_BAIXA);
+        }
+        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO) {
+            $this->add(16, 17, self::OCORRENCIA_ALT_OUTROS_DADOS);
+        }
+        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO_DATA) {
+            $this->add(16, 17, self::OCORRENCIA_ALT_VENCIMENTO);
+        }
+        if ($boleto->getStatus() == $boleto::STATUS_CUSTOM) {
+            $this->add(16, 17, sprintf('%2.02s', $boleto->getComando()));
+        }
+
+    }
 
     /**
      * @param BoletoContract $boleto
@@ -106,19 +125,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
         $this->add(14, 14, 'P');
         $this->add(15, 15, '');
-        $this->add(16, 17, self::OCORRENCIA_REMESSA);
-        if ($boleto->getStatus() == $boleto::STATUS_BAIXA) {
-            $this->add(16, 17, self::OCORRENCIA_PEDIDO_BAIXA);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_OUTROS_DADOS);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO_DATA) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_VENCIMENTO);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_CUSTOM) {
-            $this->add(16, 17, sprintf('%2.02s', $boleto->getComando()));
-        }
+        $this->addStatus($boleto);
         $this->add(18, 22, Util::formatCnab('9', $this->getAgencia(), 5));
         $this->add(23, 23, CalculoDv::bancoobAgencia($this->getAgencia()));
         $this->add(24, 35, Util::formatCnab('9', $this->getConta(), 12));
@@ -202,13 +209,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
         $this->add(14, 14, 'Q');
         $this->add(15, 15, '');
-        $this->add(16, 17, self::OCORRENCIA_REMESSA);
-        if ($boleto->getStatus() == $boleto::STATUS_BAIXA) {
-            $this->add(16, 17, self::OCORRENCIA_PEDIDO_BAIXA);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_OUTROS_DADOS);
-        }
+        $this->addStatus($boleto);
         $this->add(18, 18, strlen(Util::onlyNumbers($boleto->getPagador()->getDocumento())) == 14 ? 2 : 1);
         $this->add(19, 33, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 15));
         $this->add(34, 73, Util::formatCnab('X', $boleto->getPagador()->getNome(), 40));
@@ -248,13 +249,7 @@ class Bancoob extends AbstractRemessa implements RemessaContract
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
         $this->add(14, 14, 'R');
         $this->add(15, 15, '');
-        $this->add(16, 17, self::OCORRENCIA_REMESSA);
-        if ($boleto->getStatus() == $boleto::STATUS_BAIXA) {
-            $this->add(16, 17, self::OCORRENCIA_PEDIDO_BAIXA);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_OUTROS_DADOS);
-        }
+        $this->addStatus($boleto);
         $this->add(18, 18, '0');
         $this->add(19, 26, '00000000');
         $this->add(27, 41, '000000000000000');
